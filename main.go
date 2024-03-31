@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 
 	_ "modernc.org/sqlite"
 )
@@ -22,6 +24,31 @@ func selectSales(client int) ([]Sale, error) {
 	var sales []Sale
 
 	// напишите код здесь
+	db, err := sql.Open("sqlite", "demo.db")
+	if err != nil {
+		log.Println(err)
+		return sales, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT product, volume, date FROM sales WHERE client = :id", sql.Named("id", client))
+	if err != nil {
+		log.Println(err)
+		return sales, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		newSal := Sale{}
+
+		err := rows.Scan(&newSal.Product, &newSal.Volume, &newSal.Date)
+		if err != nil {
+			log.Println(err)
+			return sales, err
+		}
+		sales = append(sales, newSal)
+	}
 
 	return sales, nil
 }
